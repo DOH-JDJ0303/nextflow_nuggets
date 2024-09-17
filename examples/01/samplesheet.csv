@@ -1,3 +1,4 @@
 sample,assembly
-sample01,/home/misc/nextflow_nuggets/data/sample01.fa.gz
-sample02,/home/misc/nextflow_nuggets/data/sample02.fa.gz
+sample01,https://github.com/DOH-JDJ0303/nextflow_nuggets/raw/main/examples/01/data/sample01.fa.gz
+sample02,https://github.com/DOH-JDJ0303/nextflow_nuggets/raw/main/examples/01/data/sample02.fa.gz
+sample03,https://github.com/DOH-JDJ0303/nextflow_nuggets/raw/main/examples/01/data/sample03.fa.gz
