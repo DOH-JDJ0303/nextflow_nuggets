@@ -1,6 +1,6 @@
 #!/usr/bin/env Nextflow
 
-def input_file = file("samplesheet.csv")
+def input_file = file("nextflow_nuggets/examples/01/samplesheet.csv")
 
 workflow {
 
@@ -27,20 +27,20 @@ workflow {
         .length_env
         .subscribe{ sample, result -> println "path: ${sample}\t${result}" }
     
-    // // Get sequence length using Groovy
-    // ch_input
-    //     .splitFasta(elem: 1, decompress: true, record: [id: true, seqString: true])
-    //     .map{ sample, line -> [ sample, line.seqString.length() ] }
-    //     .set{ ch_length_groovy }
+    // Get sequence length using Groovy
+    ch_input
+        .splitFasta(elem: 1, decompress: true, record: [id: true, seqString: true])
+        .map{ sample, line -> [ sample, line.seqString.length() ] }
+        .set{ ch_length_groovy }
 
-    // // Compare output
-    // SEQ_LEN
-    //     .out
-    //     .length_env
-    //     .join(ch_length_groovy, by: 0)
-    //     .subscribe{ sample, length_process, length_groovy ->
-    //                 println "Sample: ${sample}\tProcess Length: ${length_process}\tGroovy Length: ${length_groovy}"  
-    //               }
+    // Compare output
+    SEQ_LEN
+        .out
+        .length_env
+        .join(ch_length_groovy, by: 0)
+        .subscribe{ sample, length_process, length_groovy ->
+                    println "Sample: ${sample}\tProcess Length: ${length_process}\tGroovy Length: ${length_groovy}"  
+                  }
 
     // // Align all seuqences
     // SEQ_ALIGN (
@@ -67,21 +67,21 @@ process SEQ_LEN {
     """
 }
 
-process SEQ_ALIGN {
-    container "docker.io/staphb/mafft:latest"
-    docker.enabled true
+// process SEQ_ALIGN {
+//     container "docker.io/staphb/mafft:latest"
+//     docker.enabled true
 
-    input:
-    path sequences
+//     input:
+//     path sequences
 
-    output:
-    path "alignment.fa", emit: alignment
+//     output:
+//     path "alignment.fa", emit: alignment
 
-    script:
-    """
-    # combine all sequences
-    zcat ${sequences} > seqs.fa
-    # align sequences
-    mafft --auto seqs.fa > alignment.fa
-    """
-}
+//     script:
+//     """
+//     # combine all sequences
+//     zcat ${sequences} > seqs.fa
+//     # align sequences
+//     mafft --auto seqs.fa > alignment.fa
+//     """
+// }
