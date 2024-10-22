@@ -16,16 +16,16 @@ workflow {
         ch_input
     )
 
-    // // Different outputs
-    SEQ_LEN
-        .out
-        .length_file
-        .subscribe{ sample, result -> println "env: ${sample}\t${result}" }
+    // // // Different outputs
+    // SEQ_LEN
+    //     .out
+    //     .length_file
+    //     .subscribe{ sample, result -> println "path: ${sample}\t${result}" }
 
-    SEQ_LEN
-        .out
-        .length_env
-        .subscribe{ sample, result -> println "path: ${sample}\t${result}" }
+    // SEQ_LEN
+    //     .out
+    //     .length_env
+    //     .subscribe{ sample, result -> println "env: ${sample}\t${result}" }
     
     // Get sequence length using Groovy
     ch_input
@@ -33,55 +33,58 @@ workflow {
         .map{ sample, line -> [ sample, line.seqString.length() ] }
         .set{ ch_length_groovy }
 
-    // Compare output
-    SEQ_LEN
-        .out
-        .length_env
-        .join(ch_length_groovy, by: 0)
-        .subscribe{ sample, length_process, length_groovy ->
-                    println "Sample: ${sample}\tProcess Length: ${length_process}\tGroovy Length: ${length_groovy}"  
-                  }
+    // // Compare output
+    // SEQ_LEN
+    //     .out
+    //     .length_env
+    //     .join(ch_length_groovy, by: 0)
+    //     .subscribe{ sample, length_process, length_groovy ->
+    //                 println "Sample: ${sample}\tProcess Length: ${length_process}\tGroovy Length: ${length_groovy}"  
+    //               }
 
-    // // Align all seuqences
-    // SEQ_ALIGN (
-    //     ch_input.map{ sample, assembly -> assembly }.collect()
-    // )
+    // Align all seuqences
+    SEQ_ALIGN (
+        ch_input.map{ sample, assembly -> assembly }.collect()
+    )
 
     // SEQ_ALIGN.out.alignment.view()
 }
 
 process SEQ_LEN {
+    publishDir 'results/length/'
+
     input:
     tuple val(sample), path(seq)
 
     output:
-    tuple val(sample), path("length.txt"), emit: length_file
+    tuple val(sample), path("*-length.txt"), emit: length_file
     tuple val(sample), env(len), emit: length_env
 
     script:
     """
     # get sequence length and save to text file
-    zcat ${seq} | grep -v '>' | tr -d '\n\r\t ' | wc -c > length.txt
+    zcat ${seq} | grep -v '>' | tr -d '\n\r\t ' | wc -c | tr -d '\n' > ${sample}-length.txt
     # get sequence length and save to variable
     len=\$(zcat ${seq} | grep -v '>' | tr -d '\n\r\t ' | wc -c)
     """
 }
 
-// process SEQ_ALIGN {
-//     container "docker.io/staphb/mafft:latest"
-//     docker.enabled true
+process SEQ_ALIGN {
+    // container "docker.io/staphb/mafft:latest"
+    // docker.enabled true
+    publishDir 'results/alignment/'
 
-//     input:
-//     path sequences
+    input:
+    path sequences
 
-//     output:
-//     path "alignment.fa", emit: alignment
+    output:
+    path "alignment.fa", emit: alignment
 
-//     script:
-//     """
-//     # combine all sequences
-//     zcat ${sequences} > seqs.fa
-//     # align sequences
-//     mafft --auto seqs.fa > alignment.fa
-//     """
-// }
+    script:
+    """
+    # combine all sequences
+    zcat ${sequences} > seqs.fa
+    # align sequences
+    mafft --auto seqs.fa > alignment.fa
+    """
+}
