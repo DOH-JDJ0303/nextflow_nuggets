@@ -1,6 +1,6 @@
 #!/usr/bin/env Nextflow
 
-def input_file = file("nextflow_nuggets/examples/01/samplesheet.csv")
+def input_file = params.input
 
 workflow {
 
@@ -11,10 +11,10 @@ workflow {
         .map{ [ it.sample, file(it.assembly) ] }
         .set{ ch_input }
 
-    // Get sequence length using process
-    SEQ_LEN (
-        ch_input
-    )
+    // // Get sequence length using process
+    // SEQ_LEN (
+    //     ch_input
+    // )
 
     // // // Different outputs
     // SEQ_LEN
@@ -27,31 +27,31 @@ workflow {
     //     .length_env
     //     .subscribe{ sample, result -> println "env: ${sample}\t${result}" }
     
-    // Get sequence length using Groovy
-    ch_input
-        .splitFasta(elem: 1, decompress: true, record: [id: true, seqString: true])
-        .map{ sample, line -> [ sample, line.seqString.length() ] }
-        .set{ ch_length_groovy }
+    // // Get sequence length using Groovy
+    // ch_input
+    //     .splitFasta(elem: 1, decompress: true, record: [id: true, seqString: true])
+    //     .map{ sample, line -> [ sample, line.seqString.length() ] }
+    //     .set{ ch_length_groovy }
 
-    // // Compare output
-    // SEQ_LEN
-    //     .out
-    //     .length_env
-    //     .join(ch_length_groovy, by: 0)
-    //     .subscribe{ sample, length_process, length_groovy ->
-    //                 println "Sample: ${sample}\tProcess Length: ${length_process}\tGroovy Length: ${length_groovy}"  
-    //               }
+    // // // Compare output
+    // // SEQ_LEN
+    // //     .out
+    // //     .length_env
+    // //     .join(ch_length_groovy, by: 0)
+    // //     .subscribe{ sample, length_process, length_groovy ->
+    // //                 println "Sample: ${sample}\tProcess Length: ${length_process}\tGroovy Length: ${length_groovy}"  
+    // //               }
 
-    // Align all seuqences
-    SEQ_ALIGN (
-        ch_input.map{ sample, assembly -> assembly }.collect()
-    )
+    // // Align all seuqences
+    // SEQ_ALIGN (
+    //     ch_input.map{ sample, assembly -> assembly }.collect()
+    // )
 
     // SEQ_ALIGN.out.alignment.view()
 }
 
 process SEQ_LEN {
-    publishDir 'results/length/'
+    publishDir "${params.outdir}/length/"
 
     input:
     tuple val(sample), path(seq)
@@ -70,9 +70,8 @@ process SEQ_LEN {
 }
 
 process SEQ_ALIGN {
-    // container "docker.io/staphb/mafft:latest"
-    // docker.enabled true
-    publishDir 'results/alignment/'
+    container "docker.io/staphb/mafft:latest"
+    publishDir "${params.outdir}/alignment/"
 
     input:
     path sequences
